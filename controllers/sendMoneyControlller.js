@@ -48,6 +48,8 @@ exports.createSendMoneyTransaction = async (req, res) => {
 
         await sendMoneyTransaction.save();
 
+        await initiatePayment(amount, sendMoneyTransaction._id, userId);
+
         const transaction = new Transaction({
             userId,
             type: 'transfer',
@@ -61,6 +63,54 @@ exports.createSendMoneyTransaction = async (req, res) => {
         return res.status(500).json({ message: 'Failed to create send money transaction', error: error.message });
     }
 };
+
+
+const axios = require('axios');
+const crypto = require('crypto');
+
+const userName = 'Abh789@sp';
+const password = 'P8c3WQ7ei';
+const authenticationKey = 'x0xzPnXsgTq0QqXx';
+const authenticationIV = 'oLA38cwT6IYNGqb3';
+const environmentBaseUrl = 'https://stage-securepay.sabpaisa.in/SabPaisa/sabPaisaInit?v=1';
+
+// Function to generate SHA-256 hash
+const generateHash = (data) => {
+    const hash = crypto.createHash('sha256');
+    hash.update(data);
+    return hash.digest('hex');
+};
+
+// Function to initiate payment
+const initiatePayment = async (userId, amount, orderId, clientCode) => {
+    try {
+        const requestData = {
+            userName,
+            password: generateHash(password),
+            apiKey: authenticationKey,
+            amount,
+            orderId,
+            userId,
+            clientCode,
+            // Other required parameters
+        };
+
+        const response = await axios.post(`${environmentBaseUrl}/payment/initiate`, requestData);
+
+        // Handle the response (e.g., log payment details)
+        console.log(response.data);
+
+        // You may want to return relevant information to the caller if needed
+        return response.data;
+    } catch (error) {
+        // Handle errors
+        console.error(error.message);
+        throw new Error('Failed to initiate payment');
+    }
+};
+
+// Example usage
+// initiatePayment(100, 'order123', 'user123');
 
 
 exports.getSendMoneyTransactionHistory = async (req, res) => {

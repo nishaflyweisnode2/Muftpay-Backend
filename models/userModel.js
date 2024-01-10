@@ -19,6 +19,12 @@ const userSchema = new mongoose.Schema({
     resetCode: {
         type: String,
     },
+    panCardImage: {
+        type: String,
+    },
+    aadharCardImage: {
+        type: String,
+    },
     otp: {
         type: String,
     },
@@ -35,7 +41,7 @@ const userSchema = new mongoose.Schema({
     },
     userType: {
         type: String,
-        enum: ["Admin", "User"], default: "User"
+        enum: ["ADMIN", "USER"], default: "USER"
     },
 
 }, { timestamps: true });
