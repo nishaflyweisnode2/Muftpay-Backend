@@ -253,7 +253,7 @@ exports.updateUser = async (req, res) => {
         if (req.body.password) {
             user.password = req.body.password;
         }
-
+        user.completeProfile = true
         await user.save();
 
         return res.status(200).json({ status: 200, message: 'User details updated successfully', data: user });
@@ -339,13 +339,18 @@ exports.uploadProfilePicture = async (req, res) => {
 
 exports.uploadAadharPicture = async (req, res) => {
     try {
+        const { aadharNumber } = req.body;
         const userId = req.user.id;
 
         if (!req.file) {
             return res.status(400).json({ status: 400, error: "Image file is required" });
         }
 
-        const updatedUser = await User.findByIdAndUpdate(userId, { aadharCardImage: req.file.path, }, { new: true });
+        if (!aadharNumber) {
+            return res.status(400).json({ status: 400, error: "Aadhar number is required" });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, { aadharCardImage: req.file.path, aadharNumber }, { new: true });
 
         if (!updatedUser) {
             return res.status(404).json({ status: 404, message: 'User not found' });
@@ -360,13 +365,18 @@ exports.uploadAadharPicture = async (req, res) => {
 
 exports.uploadPancardPicture = async (req, res) => {
     try {
+        const { panCardNumber } = req.body;
         const userId = req.user.id;
 
         if (!req.file) {
             return res.status(400).json({ status: 400, error: "Image file is required" });
         }
 
-        const updatedUser = await User.findByIdAndUpdate(userId, { panCardImage: req.file.path, }, { new: true });
+        if (!panCardNumber) {
+            return res.status(400).json({ status: 400, error: "Pan number is required" });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, { panCardImage: req.file.path, panCardNumber }, { new: true });
 
         if (!updatedUser) {
             return res.status(404).json({ status: 404, message: 'User not found' });

@@ -19,7 +19,13 @@ const userSchema = new mongoose.Schema({
     resetCode: {
         type: String,
     },
+    panCardNumber: {
+        type: String,
+    },
     panCardImage: {
+        type: String,
+    },
+    aadharNumber: {
         type: String,
     },
     aadharCardImage: {
@@ -34,6 +40,10 @@ const userSchema = new mongoose.Schema({
     gender: {
         type: String,
         enum: ["Male", "Female"],
+    },
+    completeProfile: {
+        type: Boolean,
+        default: false,
     },
     isVerified: {
         type: Boolean,

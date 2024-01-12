@@ -39,7 +39,7 @@ exports.getWallet = async (req, res) => {
             return res.status(404).json({ status: 404, message: 'User not found' });
         }
 
-        const wallet = await Wallet.findOne({ userId });
+        const wallet = await Wallet.findOne({ userId }).populate('userId transactions');
 
         if (!wallet) {
             return res.status(404).json({ status: 404, message: 'Wallet not found' });
