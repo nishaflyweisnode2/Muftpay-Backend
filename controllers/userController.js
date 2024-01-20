@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require("bcryptjs");
 const authConfig = require("../configs/auth.config");
+const twilio = require('twilio');
 
 
 const { registrationSchema, loginSchema1, generateOtp, otpSchema, resendOtpSchema, resetSchema, updateUserSchema, updateUserProfileSchema } = require('../validations/userValidation');
@@ -35,6 +36,12 @@ const { registrationSchema, loginSchema1, generateOtp, otpSchema, resendOtpSchem
 //     }
 // };
 
+const accountSid = 'ACc3033304ee542342039da929213129a5';
+const authToken = 'e29b69715405ffcdd60f4d86c63bfafb';
+const twilioClient = new twilio(accountSid, authToken);
+const twilioPhoneNumber = '+18542209455';
+
+
 exports.register = async (req, res) => {
     try {
         const { mobileNumber } = req.body;
@@ -44,23 +51,33 @@ exports.register = async (req, res) => {
         }
 
         const user = await User.findOne({ mobileNumber: mobileNumber, userType: "USER" });
+        let obj;
+
         if (!user) {
-            let otp = generateOtp()
+            let otp = generateOtp();
             const newUser = await User.create({ mobileNumber: mobileNumber, otp, userType: "USER" });
-            let obj = { id: newUser._id, otp: newUser.otp, mobileNumber: newUser.mobileNumber }
-            return res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
+            obj = { id: newUser._id, otp: newUser.otp, mobileNumber: newUser.mobileNumber };
         } else {
             const userObj = {};
-            userObj.otp = generateOtp()
+            userObj.otp = generateOtp();
             const updated = await User.findOneAndUpdate({ mobileNumber: mobileNumber, userType: "USER" }, userObj, { new: true, });
-            let obj = { id: updated._id, otp: updated.otp, mobileNumber: updated.mobileNumber }
-            return res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
+            obj = { id: updated._id, otp: updated.otp, mobileNumber: updated.mobileNumber };
         }
+
+        // Send OTP via Twilio
+        await twilioClient.messages.create({
+            body: `Your OTP is: ${obj.otp}`,
+            to: `+91${obj.mobileNumber}`,
+            from: twilioPhoneNumber,
+        });
+
+        return res.status(200).send({ status: 200, message: "logged in successfully", data: obj });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Server error" });
     }
 };
+
 
 
 exports.verifyOTP = async (req, res) => {
@@ -151,6 +168,12 @@ exports.resendOTP = async (req, res) => {
         user.otp = newOTP;
         user.isVerified = false;
         await user.save();
+
+        await twilioClient.messages.create({
+            body: `Your new OTP is: ${newOTP}`,
+            to: `+91${user.mobileNumber}`,
+            from: twilioPhoneNumber,
+        });
 
         return res.status(200).json({ status: 200, message: 'OTP resent successfully', data: user.otp });
     } catch (err) {
